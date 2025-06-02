@@ -1,5 +1,8 @@
 ﻿using Caltec.StudentInfoProject.Persistence;
 
+// Commentaire içi !!! ///
+// Pour tester runner //
+
 namespace Caltec.StudentInfoProject.Business
 {
     public abstract class BaseService
