@@ -1,100 +1,110 @@
-# Utilisation de SonarCloud avec GitHub dans une CI/CD (40 minutes)
+# DiiageCustomerApp – CI/CD avec GitHub Actions, Runner Local & SonarCloud
 
-## Prérequis matériels et logiciels
-
-- **Ordinateur portable** avec accès à Internet.
-- **Navigateur web** (Chrome, Firefox, Edge, etc.).
-- **Compte GitHub** : si vous n'en avez pas, créez-en un gratuitement [ici](https://github.com/join).
-- **Compte SonarCloud** : peut être créé pendant l'atelier.
+![CI](https://github.com/TON-UTILISATEUR/TON-DEPOT/actions/workflows/ci.yml/badge.svg)
+[![SonarCloud](https://sonarcloud.io/api/project_badges/measure?project=TON-ORGANISATION_TON-PROJET&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=TON-ORGANISATION_TON-PROJET)
 
 ---
 
-## Déroulé de l'atelier pratique
+## Prérequis
 
-### Étape 1 : Forker le dépôt GitHub
-
-#### Forker le dépôt
-
-- Cliquez sur le bouton **"Fork"** en haut à droite de la page du dépôt.
-- Sélectionnez votre compte personnel pour créer une copie du dépôt dans votre espace GitHub.
+- **Ordinateur portable** avec accès à Internet
+- **Navigateur web** (Chrome, Firefox, Edge, etc.)
+- **Compte GitHub** ([Créer un compte](https://github.com/join))
+- **Compte SonarCloud** ([Créer un compte](https://sonarcloud.io/))
 
 ---
 
-### Étape 2 : Créer un compte SonarCloud et configurer une organisation
+## Stratégie Git
 
-#### Créer un compte SonarCloud avec votre compte GitHub
-
-- Rendez-vous sur [sonarcloud.io](https://sonarcloud.io/).
-- Cliquez sur **"Sign up with GitHub"** ou utilisez ce lien direct : [Inscription SonarCloud via GitHub](https://sonarcloud.io/sessions/new?return_to=%2F&service=github).
-- Autorisez SonarCloud à accéder à votre compte GitHub si demandé.
-
-#### Créer une organisation avec le plan gratuit
-
-- Une fois connecté sur SonarCloud, cliquez sur **"Create Organization"**.
-- Sélectionnez **"Choose an organization on GitHub"**.
-- Choisissez **votre nom d'utilisateur GitHub** comme organisation.
-- Choisissez le **plan gratuit** ("Free plan") lorsque cela est proposé.
+- **Aucun push direct** sur `main` ou `develop` n’est autorisé.
+- Toute modification passe **exclusivement par une pull request** (PR) :
+  - Créer une branche à partir de `develop` :  
+    `git checkout develop && git pull origin develop && git checkout -b feature/ma-fonctionnalite`
+  - Développer, committer, puis pousser la branche :  
+    `git push -u origin feature/ma-fonctionnalite`
+  - Ouvrir une PR vers `develop` sur GitHub.
+  - Attendre la revue, la validation CI et la Quality Gate SonarCloud verte avant de fusionner.
+- Les branches `main` et `develop` sont protégées par des règles GitHub (voir section dédiée).
 
 ---
 
-### Étape 3 : Lancer la première analyse de code
+## Pipeline CI/CD
 
-#### Importer le projet GitHub dans SonarCloud
+Le pipeline CI/CD est basé sur **GitHub Actions** et s’exécute sur un **runner local**.
 
-- Dans SonarCloud, après avoir créé l'organisation, cliquez sur **"Analyze new project"**.
-- Sélectionnez le dépôt que vous avez forké (par exemple, `votre-nom-utilisateur/DiiageCustomerApp`).
-- Cliquez sur **"Set Up"** pour commencer la configuration du projet.
+### Déclencheurs
 
-#### Configurer le projet SonarCloud
+- Sur `push` et `pull_request` vers la branche `develop`.
 
-- **Nom du projet** : laissez le nom par défaut ou personnalisez-le.
-- **Clé du projet** : laissez la valeur par défaut.
-- Cliquez sur **"Continue"**.
+### Étapes principales
 
-#### Choisir la méthode d'analyse
-
-- Sur la page **"Choose how to analyze your project"**, sélectionnez **"With GitHub Actions"**.
-
-#### Suivre les instructions de SonarCloud pour configurer l'analyse
-
-- SonarCloud va vous fournir un fichier YAML préconfiguré pour GitHub Actions.
-
-#### Ajouter le jeton comme secret dans votre dépôt GitHub
-
-- Allez sur votre dépôt forké sur GitHub.
-- Cliquez sur **"Settings"** (Paramètres) > **"Secrets and variables"** > **"Actions"** > **"New repository secret"**.
-- **Nom du secret** : `SONAR_TOKEN`
-- **Valeur du secret** : collez le jeton SonarCloud que vous avez généré.
-- Cliquez sur **"Add secret"**.
-
-#### Créer le fichier GitHub Actions pour l'analyse SonarCloud
-
-- Dans votre dépôt GitHub, cliquez sur **"Actions"** en haut.
-- Vous pouvez voir des workflows suggérés ; nous allons créer un workflow personnalisé.
-- Cliquez sur **"New workflow"**, puis sur **"set up a workflow yourself"**.
-- **Nom du fichier** : `.github/workflows/sonarcloud.yml`
+1. **dotnet restore**  
+2. **dotnet build**  
+3. **dotnet test**  
+4. **Analyse SonarCloud** (avec token sécurisé)
 
 ---
 
-### Étape 4 : Vérifier l'exécution de l'analyse
+## Configuration du runner local
 
-#### Déclencher le workflow GitHub Actions
-
-- Le fait de committer le fichier de workflow déclenche automatiquement l'exécution du workflow.
-- Allez dans l'onglet **"Actions"** de votre dépôt pour voir le workflow en cours d'exécution.
-- Vous pouvez cliquer sur le workflow pour voir les détails et suivre l'exécution des étapes.
-
-#### Vérifier les résultats sur SonarCloud
-
-- Une fois le workflow terminé, retournez sur **SonarCloud**.
-- Dans votre tableau de bord, cliquez sur votre projet pour voir les résultats de l'analyse.
-- Vous verrez des métriques telles que les **Bugs**, les **Vulnérabilités**, les **Code Smells**, la **Couverture de code**, etc.
+1. Aller dans **Settings > Actions > Runners** sur GitHub.
+2. Cliquer sur **New self-hosted runner** et suivre les instructions pour ton OS.
+3. Installer le SDK .NET ([lien](https://dotnet.microsoft.com/download)).
+4. Lancer le runner avec :  
+   - Windows : `.\run.cmd`
+   - Linux/Mac : `./run.sh`
+5. Laisser la fenêtre ouverte pendant l’exécution du pipeline.
 
 ---
 
-### Étape 5 : Mise en place de Sonar sur l’un de vos projets
+## Protection des branches
 
-Intégrez une analyse statique de code à l’un de vos dépôts GitHub existants afin de procéder à son analyse en suivant les étapes du TP.  
-Si vous ne disposez pas d’un dépôt GitHub, vous pouvez choisir la stack de votre choix à partir du projet RealWorld App disponible à l'URL suivante : [RealWorld App](https://codebase.show/projects/realworld).
+- **Interdiction des push directs** sur `main` et `develop`.
+- **Pull request obligatoire** avec :
+  - CI verte (build, tests, SonarCloud Quality Gate)
+  - Au moins une revue approuvée
+- Configuration visible dans :  
+  `Settings > Branches > Branch protection rules`
 
-Ensuite, reproduisez les étapes précédentes sur ce nouveau projet.
+---
+
+## Badges
+
+- **SonarCloud** : [![SonarQube Cloud](https://sonarcloud.io/images/project_badges/sonarcloud-light.svg)](https://sonarcloud.io/summary/new_code?id=ttmartinks_tp2_devops) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ttmartinks_tp2_devops&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ttmartinks_tp2_devops)
+
+---
+
+## Livrables attendus
+
+- Pipeline CI opérationnel exécuté sur **runner local**
+- README contenant :
+    - Badge du pipeline
+    - Badge SonarCloud
+    - Description de la stratégie Git
+- Screenshot du runner local actif
+- Screenshot du pipeline exécuté localement
+- Screenshot de la Quality Gate
+- Screenshot des protections de branches
+- PR de `feature/ci-pipeline` vers `develop` validée
+
+---
+
+## Screenshots
+
+Ajoutez ici vos captures d’écran :
+
+- Runner local actif
+- Pipeline exécuté localement (GitHub Actions avec tag `self-hosted`)
+- Quality Gate SonarCloud verte
+- Protections de branches GitHub
+- PR validée
+
+---
+
+## Liens utiles
+
+- [Documentation GitHub Actions](https://docs.github.com/en/actions)
+- [Documentation SonarCloud](https://docs.sonarcloud.io/)
+- [Documentation .NET](https://learn.microsoft.com/dotnet/)
+
+---
