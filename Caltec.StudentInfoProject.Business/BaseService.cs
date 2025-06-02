@@ -11,5 +11,14 @@ namespace Caltec.StudentInfoProject.Business
             StudentInfoDbContext = studentInfoDbContext;
         }
         
+        // Méthode de test pour SonarQube : boucle infinie
+        public void InfiniteLoopTest()
+        {
+            while (true)
+            {
+                // boucle infinie pour test SonarQube
+            }
+        }
+        
     }
 }
